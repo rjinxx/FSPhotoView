@@ -70,18 +70,24 @@
     UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier];
     
     // Configure the cell...
-    if (cell == nil) {
+    if (cell == nil)
+    {
         cell = [[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:CellIdentifier] autorelease];
         [cell setAccessoryType:UITableViewCellAccessoryNone];
         [cell setSelectionStyle:UITableViewCellSelectionStyleNone];
-    }else {
-        while ([cell.contentView.subviews lastObject] != nil)
-            [(UIView*)[cell.contentView.subviews lastObject] removeFromSuperview];
     }
-    
-    if (indexPath.row == 0) {
-        
-        for (int i = 0; i < 2; i++) {
+    else
+    {
+        while ([cell.contentView.subviews lastObject] != nil)
+        {
+            [(UIView*)[cell.contentView.subviews lastObject] removeFromSuperview];
+        }
+    }
+
+    if (indexPath.row == 0)
+    {
+        for (int i = 0; i < 2; i++)
+        {
             UIImageView *imageView = [[UIImageView alloc] initWithFrame:CGRectMake(5+i*(155+2.5), 0, 152.5, 300)];
             [imageView setContentMode:UIViewContentModeScaleAspectFill];
             [imageView setClipsToBounds:YES];
@@ -90,15 +96,15 @@
             [cell.contentView addSubview:imageView];
             
             UITapGestureRecognizer *tapGes = [[UITapGestureRecognizer alloc] initWithTarget:self
-                                                                                      action:@selector(tapClickAction:)];
+                                                                                     action:@selector(tapClickAction:)];
             [imageView addGestureRecognizer:tapGes];
             [tapGes release];
 
             [imageView release];
         }
-
-    }else {
-        
+    }
+    else
+    {
         UIImageView *imageView = [[UIImageView alloc] initWithFrame:CGRectMake(5, 0, 310, 200)];
         [imageView setContentMode:UIViewContentModeScaleAspectFill];
         [imageView setClipsToBounds:YES];
@@ -116,7 +122,8 @@
     return cell;
 }
 
-- (void)tapClickAction:(UITapGestureRecognizer *)sender {
+- (void)tapClickAction:(UITapGestureRecognizer *)sender
+{
     [FSPhotoView showImageWithSenderView:(UIImageView*)sender.view];
 }
 

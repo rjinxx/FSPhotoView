@@ -10,7 +10,7 @@
 
 @interface FSPhotoView () <UIScrollViewDelegate> {
     BOOL    _disableAutoLayout;
-    BOOL    _aspectFillMode;
+    UIViewContentMode ivContentMode;
 }
 @property (nonatomic, retain) UIImageView       *imageView;
 @property (nonatomic, assign) CGRect            senderFrame;
@@ -18,7 +18,7 @@
 @property (nonatomic, assign) CGFloat           offscreenY;
 @property (copy)              DisappearBlcok    block;
 
-- (void)displayImage:(UIImage *)newImage withSenderView:(UIView*)senderView;
+- (void)displayImage:(UIImage *)newImage withSenderView:(UIImageView*)senderView;
 @end
 
 @implementation FSPhotoView
@@ -82,7 +82,7 @@
 }
 
 #pragma mark - Display Functions
-- (void)displayImage:(UIImage *)newImage withSenderView:(UIView*)senderView
+- (void)displayImage:(UIImage *)newImage withSenderView:(UIImageView*)senderView
 {
     CGSize  frameSize = self.frame.size;
     CGSize  imageSize = newImage.size;
@@ -243,22 +243,25 @@
     }
 }
 
-- (void)configAnimationDisplay:(UIView *)senderView
+- (void)configAnimationDisplay:(UIImageView *)senderView
 {
-    UIImageView *oriImageView = (UIImageView *)senderView;
-    CGFloat imageViewRate = oriImageView.frame.size.width/oriImageView.frame.size.height;
-    CGFloat imageRate = oriImageView.image.size.width/oriImageView.image.size.height;
+    if (nil == senderView) return;
     
-    _aspectFillMode = !(fabs(imageViewRate-imageRate)<0.000001);
     self.offscreenY = 0.f;
     
-    if (_aspectFillMode)
-    {
-        [self aspectFillModeShowWithSenderView:senderView];
-    }
-    else
-    {
-        [self normalModeShowWithSenderView:senderView];
+    switch (senderView.contentMode) {
+        case UIViewContentModeScaleAspectFit:
+            ivContentMode = UIViewContentModeScaleAspectFit;
+            [self aspectFillModeShowWithSenderView:senderView];
+            break;
+        case UIViewContentModeScaleAspectFill:
+            ivContentMode = UIViewContentModeScaleAspectFill;
+            [self aspectFillModeShowWithSenderView:senderView];
+            break;
+        default:
+            ivContentMode = UIViewContentModeScaleToFill;
+            [self normalModeShowWithSenderView:senderView];
+            break;
     }
 }
 
@@ -289,7 +292,8 @@
     CGFloat hImageRate = oriImageView.image.size.height/oriImageView.image.size.width;
     CGFloat hViewRate = oriImageView.frame.size.height/oriImageView.frame.size.width;
 
-    if (hImageRate > hViewRate)
+    if ( (ivContentMode == UIViewContentModeScaleAspectFill && hImageRate > hViewRate) ||
+         (ivContentMode == UIViewContentModeScaleAspectFit  && hImageRate < hViewRate) )
     {
         convertRect.size.height = oriImageView.image.size.height*senderView.frame.size.width/oriImageView.image.size.width;
         convertRect.origin.y = senderView.frame.origin.y - (convertRect.size.height-senderView.frame.size.height)*0.5f;
@@ -334,14 +338,9 @@
 
 - (void)removePhotoView
 {
-    if ([self isZoomed])
-    {
-        [self setZoomScale:self.minimumZoomScale animated:NO];
-    }
-    
     _disableAutoLayout = YES;
 
-    if (_aspectFillMode)
+    if (ivContentMode != UIViewContentModeScaleToFill)
     {
         UIView *clipView = [[[UIView alloc] initWithFrame:[self imageView].frame] autorelease];
         [clipView setClipsToBounds:YES];
@@ -352,6 +351,10 @@
         
         [UIView animateWithDuration:0.3f animations:^{
             [clipView setFrame:self.clipsFrame];
+            if ([self isZoomed])
+            {
+                [self setContentOffset:CGPointMake(0.f, 0.f)];
+            }
             [[self imageView] setFrame:self.senderFrame];
         }];
         
@@ -379,6 +382,10 @@
             
             [UIView animateWithDuration:0.3f animations:^{
                 [clipView setFrame:clipOriFrame];
+                if ([self isZoomed])
+                {
+                    [self setContentOffset:CGPointMake(0.f, 0.f)];
+                }
                 [[self imageView] setFrame:CGRectMake(self.senderFrame.origin.x, -self.offscreenY, self.senderFrame.size.width, self.senderFrame.size.height)];
             }];
             
@@ -392,6 +399,10 @@
         else
         {
             [UIView animateWithDuration:0.3f animations:^{
+                if ([self isZoomed])
+                {
+                    [self setContentOffset:CGPointMake(0.f, 0.f)];
+                }
                 [[self imageView] setFrame:self.senderFrame];
             }];
             
